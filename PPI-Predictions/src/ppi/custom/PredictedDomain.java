@@ -33,4 +33,36 @@ public class PredictedDomain {
 		return "DomainNode [domainName=" + domainName + ", proteinName=" + proteinName + ", type=" + type
 				+ ", bitScore=" + bitScore + ", eValue=" + eValue + ", start=" + start + ", end=" + end + "]";
 	}
+
+	public String getDomainName() {
+		return domainName;
+	}
+
+	public String getProteinName() {
+		return proteinName;
+	}
+
+	public String getGeneName() {
+		return geneName;
+	}
+
+	public String getType() {
+		return type;
+	}
+
+	public String getBitScore() {
+		return bitScore;
+	}
+
+	public String geteValue() {
+		return eValue;
+	}
+
+	public String getStart() {
+		return start;
+	}
+
+	public String getEnd() {
+		return end;
+	}
 }

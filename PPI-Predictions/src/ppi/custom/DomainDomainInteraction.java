@@ -17,5 +17,16 @@ public class DomainDomainInteraction {
 		return "DomainDomainInteraction [sourceDomain=" + sourceDomain + ", targetDomain=" + targetDomain
 				+ ", occurences=" + occurences + "]";
 	}
-	
+
+	public String getSourceDomain() {
+		return sourceDomain;
+	}
+
+	public String getTargetDomain() {
+		return targetDomain;
+	}
+
+	public String getOccurences() {
+		return occurences;
+	}
 }

@@ -26,6 +26,7 @@ public class NodeFileReader {
 				
 				reader = new BufferedReader(new FileReader(uniprotFile));
 				String line = reader.readLine();//skip header
+				System.out.println("Skipping header line : " + line); //TODO make this optional?
 				while ((line = reader.readLine()) != null) {
 					String[] data = line.split("\t");
 					String geneName = data[1].substring(0, data[1].indexOf(".")); //TODO use different rules for ara vs maize

@@ -38,6 +38,7 @@ public class EdgeFileReader {
 				
 				reader = new BufferedReader(new FileReader(uniprotFile));
 				String line = reader.readLine();//skip header
+				System.out.println("Skipping header line : " + line); //TODO make this optional?
 				while ((line = reader.readLine()) != null) {
 					String[] data = line.split("\t");
 					DDIs.add(new DomainDomainInteraction(data[0], data[1], data[2]));

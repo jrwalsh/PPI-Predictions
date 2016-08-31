@@ -11,7 +11,7 @@ import javax.swing.JFileChooser;
 
 import ppi.custom.PredictedDomain;
 
-public class NodeReader {
+public class NodeFileReader {
 	public static ArrayList<PredictedDomain> readNodeList() {
 		BufferedReader reader = null;
 		ArrayList<PredictedDomain> predictedDomains = new ArrayList<PredictedDomain>(); 

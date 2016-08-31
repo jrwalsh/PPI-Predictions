@@ -18,17 +18,24 @@ import org.jgrapht.graph.DefaultDirectedGraph;
 import org.jgrapht.graph.DefaultEdge;
 import org.jgrapht.graph.SimpleGraph;
 
+import ppi.custom.DomainDomainInteraction;
 import ppi.custom.DomainNode;
 import ppi.custom.PredictedDomain;
-import ppi.preprocessing.NodeReader;
+import ppi.preprocessing.EdgeFileReader;
+import ppi.preprocessing.NodeFileReader;
 
 
 public class Main {
 	
 	public static void main(String args[]) {
-		ArrayList<PredictedDomain> predictedDomains = NodeReader.readNodeList();
-		for (PredictedDomain d : predictedDomains) {
-			System.out.println(d);
+		ArrayList<PredictedDomain> predictedDomains = NodeFileReader.readNodeList();
+		for (PredictedDomain predDomain : predictedDomains) {
+			System.out.println(predDomain);
+		}
+		
+		ArrayList<DomainDomainInteraction> DDIs = EdgeFileReader.readDDIList();
+		for (DomainDomainInteraction ddi : DDIs) {
+			System.out.println(ddi);
 		}
 	}
 	

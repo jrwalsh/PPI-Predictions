@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
 
 import javax.swing.JFileChooser;
 
@@ -12,18 +13,25 @@ import org.jgrapht.UndirectedGraph;
 import org.jgrapht.graph.DefaultEdge;
 import org.jgrapht.graph.SimpleGraph;
 
+import ppi.custom.DomainDomainInteraction;
 import ppi.custom.DomainNode;
+import ppi.custom.PredictedDomain;
 
-public class EdgeReader {
-	public static void readNodeList() {
+/**
+ * Read in a list of edges.  Currently support Domain-Domain-Interaction (DDI) edge lists.
+ * 
+ * @author jesse
+ *
+ */
+public class EdgeFileReader {
+	public static ArrayList<DomainDomainInteraction> readDDIList() {
 		BufferedReader reader = null;
-//		HashMap<String, DomainNode> domainMap = new HashMap<String, DomainNode>();
-		UndirectedGraph<DomainNode, DefaultEdge> predictions = new SimpleGraph<DomainNode, DefaultEdge>(DefaultEdge.class);
+		ArrayList<DomainDomainInteraction> DDIs = new ArrayList<DomainDomainInteraction>(); 
 		
 		try {
-//			UIManager.setLookAndFeel("com.sun.java.swing.plaf.windows.WindowsLookAndFeel");
+//			UIManager.setLookAndFeel("com.sun.java.swing.plaf.windows.WindowsLookAndFeel"); //TODO use this LookAndFeel when on windows
 			JFileChooser fc = new JFileChooser();
-			fc.setCurrentDirectory(new File("Data/Arabidopsis"));
+			fc.setCurrentDirectory(new File("Data/iPfam")); //TODO don't hardcode the file locations
 			
 			if (fc.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
 				File uniprotFile = fc.getSelectedFile();
@@ -32,15 +40,12 @@ public class EdgeReader {
 				String line = reader.readLine();//skip header
 				while ((line = reader.readLine()) != null) {
 					String[] data = line.split("\t");
-					predictions.addVertex(new ppi.custom.DomainNode(data[0], data[1], data[2], data[3], data[4], data[5], data[6]));
+					DDIs.add(new DomainDomainInteraction(data[0], data[1], data[2]));
 				}
+				
 			} else {
 				System.err.println("User Canceled");
-				return;
-			}
-			
-			for (Object v : predictions.vertexSet()) {
-				System.out.println(v.toString());
+				return null;
 			}
 			
 		} catch (FileNotFoundException exception) {
@@ -63,5 +68,6 @@ public class EdgeReader {
 				exception.printStackTrace();
 			}
 		}
+		return DDIs;
 	}
 }

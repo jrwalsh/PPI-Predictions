@@ -22,11 +22,12 @@ public class NodeFileReader {
 			fc.setCurrentDirectory(new File("Data/Arabidopsis")); //TODO don't hardcode the file locations
 			
 			if (fc.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
+				System.out.println("Reading node file..."); //TODO only on verbose flag
 				File uniprotFile = fc.getSelectedFile();
 				
 				reader = new BufferedReader(new FileReader(uniprotFile));
 				String line = reader.readLine();//skip header
-				System.out.println("Skipping header line : " + line); //TODO make this optional?
+				System.out.println("Skipping header line : " + line); //TODO only on verbose flag
 				while ((line = reader.readLine()) != null) {
 					String[] data = line.split("\t");
 					String geneName = data[1].substring(0, data[1].indexOf(".")); //TODO use different rules for ara vs maize
@@ -58,6 +59,7 @@ public class NodeFileReader {
 				exception.printStackTrace();
 			}
 		}
+		System.out.println("Done reading node file!"); //TODO only on verbose flag
 		return predictedDomains;
 	}
 }

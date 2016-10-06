@@ -34,8 +34,13 @@ public class DomainDomainInteraction {
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + ((sourceDomain == null) ? 0 : sourceDomain.hashCode());
-		result = prime * result + ((targetDomain == null) ? 0 : targetDomain.hashCode());
+		if (sourceDomain.compareTo(targetDomain) < 0) {
+			result = prime * result + ((sourceDomain == null) ? 0 : sourceDomain.hashCode());
+			result = prime * result + ((targetDomain == null) ? 0 : targetDomain.hashCode());
+		} else {
+			result = prime * result + ((targetDomain == null) ? 0 : targetDomain.hashCode());
+			result = prime * result + ((sourceDomain == null) ? 0 : sourceDomain.hashCode());
+		}
 		return result;
 	}
 

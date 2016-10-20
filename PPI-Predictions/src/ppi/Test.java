@@ -65,10 +65,13 @@ public class Test {
 		ArrayList<PredictedDomain> predictedDomains = NodeFileReader.readNodeList();
 		ArrayList<GeneGeneInteraction> GGIs = EdgeFileReader.readGGIList();
 		
+		// Get all unique genes in the predicted set
 		HashSet<String> geneNames = new HashSet<String>();
 		for (PredictedDomain predictedDomain : predictedDomains) {
 			geneNames.add(predictedDomain.getGeneName());
 		}
+		
+		// Get all unique genes in the high confidence set.
 		for (GeneGeneInteraction ggi : GGIs) {
 			geneNames.add(ggi.getSourceGene());
 			geneNames.add(ggi.getTargetGene());
@@ -148,16 +151,23 @@ public class Test {
 	private static void getCoexpressionOfPredictedEdges() {
 		ArrayList<PredictedDomain> predictedDomains = NodeFileReader.readNodeList();
 		ArrayList<DomainDomainInteraction> DDIs = EdgeFileReader.readDDIList();
+		ArrayList<GeneGeneInteraction> GGIs = EdgeFileReader.readGGIList();
 		HashMap<String, String> map = readMap();
 		UndirectedGraph<String, DefaultEdge> graph = NetworkFactory.generateNetwork(predictedDomains, DDIs);
 		System.out.println(graph.edgeSet().size() + " edges in this network");
 		
+		ArrayList<GeneGeneInteraction> predictedGGIs = new ArrayList<GeneGeneInteraction>();
+		predictedGGIs.addAll(NetworkFactory.convertEdgesToGGIs(graph));
+		
 		String out = "";
 		int failToMap = 0;
 		int failToFindData = 0;
-		for (DefaultEdge edge : graph.edgeSet()) {
-			String source = map.get(graph.getEdgeSource(edge));
-			String target = map.get(graph.getEdgeTarget(edge));
+//		for (DefaultEdge edge : graph.edgeSet()) {
+//			String source = map.get(graph.getEdgeSource(edge));
+//			String target = map.get(graph.getEdgeTarget(edge));
+		for (GeneGeneInteraction ggi : predictedGGIs) {
+			String source = map.get(ggi.getSourceGene());
+			String target = map.get(ggi.getTargetGene());
 			if (source == null || target == null || source.isEmpty() || target.isEmpty()) {
 //				System.err.println("Edge " + graph.getEdgeSource(edge) + " : " + graph.getEdgeTarget(edge) + " not mapped");
 				failToMap++;
@@ -174,8 +184,13 @@ public class Test {
 					while ((line = reader.readLine()) != null) {
 						String[] data = line.split("\t");
 						if (data[0].equalsIgnoreCase(target)) {
-							out += source + ":" + target + "\t" + data[2] + "\n";
-//							System.out.println(source + ":" + target + "\t" + line);
+							if (GGIs.contains(ggi)) {
+								out += source + ":" + target + "\t" + data[2] + "\tTP\n";
+//								System.out.println(source + ":" + target + "\t" + data[2] + "\tTP");
+							} else {
+								out += source + ":" + target + "\t" + data[2] + "\tFP\n";
+//								System.out.println(source + ":" + target + "\t" + data[2] + "\tFP");
+							}
 						}
 					}
 				} catch (IOException e) {

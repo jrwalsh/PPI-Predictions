@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Scanner;
 
 import javax.swing.JFileChooser;
 
@@ -35,13 +36,66 @@ public class Main {
 	public static void main(String args[]) {
 		Long start = System.currentTimeMillis();
 		
-		test();
-//		basicStatistics();
-//		countDDIFrequency();
-//		generateNetworkFromiPfam();
-//		generateNetworkFromAssumedDDIs();
-//		generateConfusionMatrix();
-//		crossValidate();
+		Scanner scanner = new Scanner(System.in);
+		System.out.print(
+				"======================= Available Methods =======================" + "\n" +
+				"== 1: test										 				" + "\n" +
+				"== 2: basicStatistics											" + "\n" +
+				"== 3: countDDIFrequency										" + "\n" +
+				"== 4: generateNetworkFromiPfam									" + "\n" +
+				"== 5: generateNetworkFromAssumedDDIs							" + "\n" +
+				"== 6: generateConfusionMatrix									" + "\n" +
+				"== 7: crossValidate											" + "\n" +
+				"=================================================================" + "\n" +
+				"Enter selection > "
+				);
+		String line = scanner.nextLine();
+		scanner.close();
+		int selection;
+		try {
+			selection = Integer.parseInt(line);
+			if (selection < 1 || selection > 7) {
+				System.out.println("Invalid selection");
+				selection = 0;
+			}
+		} catch (Exception e) {
+			System.out.println("Invalid input : \"" + line + "\"");
+			selection = 0;
+		}
+		
+		switch (selection) {
+			case 0:
+				System.out.println("Shutting down ...");
+				break;
+			case 1:
+				System.out.println("Running test ...");
+				test();
+				break;
+			case 2:
+				System.out.println("Running basicStatistics ...");
+				basicStatistics();
+				break;
+			case 3:
+				System.out.println("Running countDDIFrequency ...");
+				countDDIFrequency();
+				break;
+			case 4:
+				System.out.println("Running generateNetworkFromiPfam ...");
+				generateNetworkFromiPfam();
+				break;
+			case 5:
+				System.out.println("Running generateNetworkFromAssumedDDIs ...");
+				generateNetworkFromAssumedDDIs();
+				break;
+			case 6:
+				System.out.println("Running generateConfusionMatrix ...");
+				generateConfusionMatrix();
+				break;
+			case 7:
+				System.out.println("Running crossValidate ...");
+				crossValidate();
+				break;
+		}
 		
 		System.out.println("done!");
 		

@@ -14,6 +14,7 @@ import java.util.HashSet;
 import java.util.Scanner;
 
 import javax.swing.JFileChooser;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
 import org.jgrapht.UndirectedGraph;
 import org.jgrapht.graph.DefaultEdge;
@@ -107,7 +108,134 @@ public class Main {
 	}
 	
 	private static void test() {
-		readMap();
+		UndirectedGraph<String, DefaultEdge> graph = generateNetworkFromiPfam();
+		writeGraph(graph);
+		
+//		readGraph();
+	}
+	
+	private static void writeGraph(UndirectedGraph<String, DefaultEdge> graph) {
+		FileWriter fw = null;
+		try {
+			JFileChooser fc = new JFileChooser();
+			fc.setCurrentDirectory(new File("Data/Graph"));
+			fc.addChoosableFileFilter(new FileNameExtensionFilter("PPI Files", "ppi"));
+			
+			File graphFile;
+			if (fc.showSaveDialog(null) == JFileChooser.APPROVE_OPTION) {
+				graphFile = fc.getSelectedFile();
+				if (graphFile.getName().endsWith(".ppi")) graphFile = new File(graphFile.getAbsolutePath().substring(0, graphFile.getAbsolutePath().length() - 4));
+			} else {
+				System.err.println("User Canceled");
+				return;
+			}
+
+			// Write nodes
+			if (verbose) System.out.println("Writing graph file...");
+			fw = new FileWriter(graphFile + ".ppi");
+			String outString = "";
+			fw.write("Node\t" + "\n");
+			for (String vertex : graph.vertexSet()) {
+				fw.append(vertex + "\t" + "\n");
+			}
+			
+			// Write edges
+			fw.append("\n");
+			fw.append("Source\tTarget\t" + "\n");
+			for (DefaultEdge edge : graph.edgeSet()) {
+				fw.append(graph.getEdgeSource(edge) + "\t" + graph.getEdgeTarget(edge) + "\n");
+			}
+		} catch (FileNotFoundException exception) {
+			exception.printStackTrace();
+		} catch (IOException exception) {
+			exception.printStackTrace();
+		} catch (Exception exception) {
+			exception.printStackTrace();
+		}
+		finally {
+			try {
+			} catch (Exception exception) {
+				exception.printStackTrace();
+			}
+			try {
+				if (fw != null) {
+					fw.close();
+				}
+			} catch (IOException exception) {
+				exception.printStackTrace();
+			}
+		}
+	}
+	
+	private static UndirectedGraph<String, DefaultEdge> readGraph() {
+		BufferedReader reader = null;
+		UndirectedGraph<String, DefaultEdge> graph = new MixedGraph<String, DefaultEdge>(DefaultEdge.class);
+		
+		try {
+			JFileChooser fc = new JFileChooser();
+			fc.setCurrentDirectory(new File("Data/Graph"));
+			fc.addChoosableFileFilter(new FileNameExtensionFilter("PPI Files", "ppi"));
+			
+			File graphFile;
+//			if (!userSelectedFile)  {
+//				mapFile = new File("");//TODO
+//			} else 
+			if (fc.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
+				graphFile = fc.getSelectedFile();
+			} else {
+				System.err.println("User Canceled");
+				return null;
+			}
+			
+			if (verbose) System.out.println("Reading graph file...");
+			reader = new BufferedReader(new FileReader(graphFile));
+			String line = "";
+			boolean readNodes = true;
+			while ((line = reader.readLine()) != null) {
+				if (line.startsWith("Node")) {
+					readNodes = true;
+					continue;
+				} else if (line.startsWith("Source")) {
+					readNodes = false;
+					continue;
+				} else if (line.isEmpty()) {
+					continue;
+				}
+				
+				if (readNodes) {
+					String[] data = line.split("\t");
+					String geneName = data[0];
+					graph.addVertex(geneName);
+				} else {
+					String[] data = line.split("\t");
+					String source = data[0];
+					String target = data[1];
+					graph.addEdge(source, target);
+				}
+			}
+			
+		} catch (FileNotFoundException exception) {
+			exception.printStackTrace();
+		} catch (IOException exception) {
+			exception.printStackTrace();
+		} catch (Exception exception) {
+			exception.printStackTrace();
+		}
+		finally {
+			try {
+			} catch (Exception exception) {
+				exception.printStackTrace();
+			}
+			try {
+				if (reader != null) {
+					reader.close();
+				}
+			} catch (IOException exception) {
+				exception.printStackTrace();
+			}
+		}
+		if (verbose) System.out.println("Done reading graph file! Graph has " + graph.vertexSet().size() + " nodes and " + graph.edgeSet().size() + " edges.");
+		return graph;
 	}
 	
 	// This provides a mapping between arabidopsis gene name and entrezID. Assume only one to one mapping.
@@ -233,11 +361,12 @@ public class Main {
 	/**
 	 * Try generating a network based on iPfam DDIs
 	 */
-	private static void generateNetworkFromiPfam() {
+	private static UndirectedGraph<String, DefaultEdge> generateNetworkFromiPfam() {
 		ArrayList<PredictedDomain> predictedDomains = NodeFileReader.readNodeList();
 		ArrayList<DomainDomainInteraction> DDIs = EdgeFileReader.readDDIList();
 		UndirectedGraph<String, DefaultEdge> graph = NetworkFactory.generateNetwork(predictedDomains, DDIs);
 		System.out.println(graph.edgeSet().size() + " edges in this network");
+		return graph;
 	}
 	
 	/**

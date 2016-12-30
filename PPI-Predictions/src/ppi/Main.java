@@ -28,10 +28,12 @@ import ppi.preprocessing.NodeFileReader;
 
 
 public class Main {
-	private final String predictedDomains = "/Data/Arabidopsis/pfam_predictions.tab";
-	private final String iPfamDDIs = "/Data/iPfam/iPfam_domain_interactions.tab";
-	private final String highConfidenceGGIs = "/Data/Arabidopsis/high_confidence_interactions.tab";
-	private final String mapGeneNamesToIDs = "/Data/eutils_map_with_hc.tab";
+	private final static boolean userSelectedFile = false;
+	private final static boolean verbose = true;
+	private final String predictedDomains = "Data/Arabidopsis/pfam_predictions.tab";
+	private final String iPfamDDIs = "Data/iPfam/iPfam_domain_interactions.tab";
+	private final String highConfidenceGGIs = "Data/Arabidopsis/high_confidence_interactions.tab";
+	private final static String mapGeneNamesToIDs = "Data/eutils_map_with_hc.tab";
 	
 	public static void main(String args[]) {
 		Long start = System.currentTimeMillis();
@@ -104,103 +106,38 @@ public class Main {
 		System.out.println("Runtime is " + runtime + " seconds.");
 	}
 	
-	/**
-	 * Test run ideas
-	 */
 	private static void test() {
-		ArrayList<PredictedDomain> predictedDomains = NodeFileReader.readNodeList();
-		ArrayList<DomainDomainInteraction> DDIs = EdgeFileReader.readDDIList();
-		HashMap<String, String> map = readMap();
-		UndirectedGraph<String, DefaultEdge> graph = NetworkFactory.generateNetwork(predictedDomains, DDIs);
-		System.out.println(graph.edgeSet().size() + " edges in this network");
-		
-		HashSet<String> set = new HashSet<String>();
-		for (DefaultEdge edge : graph.edgeSet()) {
-			set.add(graph.getEdgeSource(edge));
-			set.add(graph.getEdgeTarget(edge));
-//			System.out.println(map.get(graph.getEdgeSource(edge)) + "\t" + map.get(graph.getEdgeTarget(edge)));
-		}
-		int hit = 0;
-		int miss = 0;
-		String out = "";
-		for (String item : set) {
-			if (map.containsKey(item)) hit++;
-			else miss++;
-			out += item + "\n";
-		}
-		System.out.println(hit + "\t" + miss);
-		printString(new File("/home/jesse/Desktop/test.out"), out);
-		
-//		DomainDomainInteraction ddia = new DomainDomainInteraction("PF00319", "PF01486", null);
-//		DomainDomainInteraction ddib = new DomainDomainInteraction("PF01486", "PF00319", null);
-//		System.out.println(ddia.equals(ddib));
-//		
-//		HashSet<DomainDomainInteraction> ddis = new HashSet<DomainDomainInteraction>();
-//		ddis.add(ddia);
-//		ddis.add(ddib);
-//		System.out.println(ddis.size());
-//		System.out.println(ddia.hashCode());
-//		System.out.println(ddib.hashCode());
-//		
-//		final int prime = 31;
-//		int result = 1;
-//		System.out.println(result);
-//		result = prime * result + (("PF01486" == null) ? 0 : "PF00319".hashCode());
-//		System.out.println(result);
-//		result = prime * result + (("PF00319" == null) ? 0 : "PF01486".hashCode());
-//		System.out.println(result);
-		
-//		ArrayList<PredictedDomain> predictedDomains = NodeFileReader.readNodeList();
-//		ArrayList<DomainDomainInteraction> DDIs = EdgeFileReader.readDDIList();
-//		ArrayList<GeneGeneInteraction> GGIs = EdgeFileReader.readGGIList();
-//		
-//		HashSet<DomainDomainInteraction> assumed_DDI_set = NetworkFactory.convertGGItoDDI(predictedDomains, GGIs);
-//		HashSet<DomainDomainInteraction> DDI_intersection = new HashSet<DomainDomainInteraction>();
-//		DDI_intersection.addAll(DDIs);
-//		DDI_intersection.retainAll(assumed_DDI_set);
-//		ArrayList<DomainDomainInteraction> DDI_set = new ArrayList<DomainDomainInteraction>();
-//		DDI_set.addAll(DDI_intersection);
-//		
-//		UndirectedGraph<String, DefaultEdge> predictedGraph = NetworkFactory.generateNetwork(predictedDomains, DDI_set);
-//		ArrayList<GeneGeneInteraction> predictedGGIs = new ArrayList<GeneGeneInteraction>();
-//		ArrayList<GeneGeneInteraction> tpGGIs = new ArrayList<GeneGeneInteraction>();
-//		predictedGGIs.addAll(NetworkFactory.convertEdgesToGGIs(predictedGraph));
-//		tpGGIs.addAll(predictedGGIs);
-//		tpGGIs.retainAll(GGIs); // Intersection gives all TP results
-//		
-//		System.out.println("HCSet\tPredictions\tTP");
-//		System.out.println(GGIs.size() + "\t" + predictedGGIs.size() + "\t" + tpGGIs.size());
-//		
-//		System.out.println("Size of DDI set");
-//		System.out.println(DDI_set.size());
+		readMap();
 	}
 	
+	// This provides a mapping between arabidopsis gene name and entrezID. Assume only one to one mapping.
+	//TODO handle when many-to-many happens, or at least detect when it occurs?
 	public static HashMap<String, String> readMap() {
 		BufferedReader reader = null;
 		HashMap<String, String> map = new HashMap<String, String>(); 
 		
 		try {
-//			UIManager.setLookAndFeel("com.sun.java.swing.plaf.windows.WindowsLookAndFeel"); //TODO use this LookAndFeel when on windows
 			JFileChooser fc = new JFileChooser();
-			fc.setCurrentDirectory(new File("Data")); //TODO don't hardcode the file locations
-			
-			if (fc.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
-				System.out.println("Reading map file..."); //TODO only on verbose flag
-				File mapFile = fc.getSelectedFile();
-				
-				reader = new BufferedReader(new FileReader(mapFile));
-				String line = reader.readLine();//skip header
-				System.out.println("Skipping header line : " + line); //TODO only on verbose flag
-				while ((line = reader.readLine()) != null) {
-					String[] data = line.split("\t");
-					String geneName = data[0].toUpperCase();
-					String entrezID = data[1].replaceAll(";", ""); //TODO handle when many-to-many happens
-					map.put(geneName, entrezID);
-				}
-				
+			fc.setCurrentDirectory(new File("Data"));
+			File mapFile;
+			if (!userSelectedFile)  {
+				mapFile = new File(mapGeneNamesToIDs);
+			} else if (fc.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
+				mapFile = fc.getSelectedFile();
 			} else {
 				System.err.println("User Canceled");
 				return null;
+			}
+			
+			if (verbose) System.out.println("Reading map file...");
+			reader = new BufferedReader(new FileReader(mapFile));
+			String line = reader.readLine();//skip header
+			if (verbose) System.out.println("Skipping header line : " + line);
+			while ((line = reader.readLine()) != null) {
+				String[] data = line.split("\t");
+				String geneName = data[0].toUpperCase();
+				String entrezID = data[1].replaceAll(";", ""); 
+				map.put(geneName, entrezID);
 			}
 			
 		} catch (FileNotFoundException exception) {
@@ -223,7 +160,7 @@ public class Main {
 				exception.printStackTrace();
 			}
 		}
-		System.out.println("Done reading map file!"); //TODO only on verbose flag
+		if (verbose) System.out.println("Done reading map file!");
 		return map;
 	}
 	

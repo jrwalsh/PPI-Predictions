@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Random;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -60,7 +61,7 @@ public class Test {
 	private static void test() {
 //		mappableCoexp();
 //		percentMappableGenes();
-		printDegree();
+//		printDegree();
 //		getCoexpressionOfPredictedEdges();
 //		getCoexpressionOfHCEdges();
 		
@@ -68,6 +69,106 @@ public class Test {
 //		graphable();
 //		removeBasedOnPredictedOrder();
 //		removeBasedOnRandomRemoval();
+		
+		neighborExpressions();
+	}
+	
+	private static void neighborExpressions() {
+		// For HC set
+		ArrayList<GeneGeneInteraction> GGIs = EdgeFileReader.readGGIList();
+		UndirectedGraph<String, DefaultEdge> graph = new MixedGraph<String, DefaultEdge>(DefaultEdge.class);
+		for (GeneGeneInteraction GGI : GGIs) {
+			graph.addVertex(GGI.getSourceGene());
+			graph.addVertex(GGI.getTargetGene());
+			graph.addEdge(GGI.getSourceGene(), GGI.getTargetGene());
+		}
+		
+		// For Predicted Set
+//		ArrayList<PredictedDomain> predictedDomains = NodeFileReader.readNodeList();
+//		ArrayList<DomainDomainInteraction> DDIs = EdgeFileReader.readDDIList();
+//		HashMap<String, String> map = readMap();
+		HashMap<String, Double> fpkmMap = readFPKMMap();
+//		UndirectedGraph<String, DefaultEdge> graph = NetworkFactory.generateNetwork(predictedDomains, DDIs);
+		System.out.println(graph.edgeSet().size() + " edges in this network");
+		
+		FileWriter fw = null;
+		try {
+			fw = new FileWriter("data_out.tab");
+			fw.write("Gene\tDegree\tExp\tLow\tHigh\tSum\tAvg\n");
+			for (String gene : graph.vertexSet()) {
+				String outString = gene + "\t" + graph.degreeOf(gene) + "\t";
+				
+				graph.degreeOf(gene);
+				
+				ArrayList<Double> neighborExpressions = new ArrayList<Double>();
+				for (DefaultEdge edge : graph.edgesOf(gene)) {
+					if (!graph.getEdgeSource(edge).equalsIgnoreCase(gene)) {
+						if (fpkmMap.containsKey(graph.getEdgeSource(edge)) && fpkmMap.get(graph.getEdgeSource(edge)) > 0) neighborExpressions.add(fpkmMap.get(graph.getEdgeSource(edge)));
+						else System.err.println("No expression for gene " + graph.getEdgeSource(edge));
+					}
+					if (!graph.getEdgeTarget(edge).equalsIgnoreCase(gene)) {
+						if (fpkmMap.containsKey(graph.getEdgeTarget(edge)) && fpkmMap.get(graph.getEdgeTarget(edge)) > 0) neighborExpressions.add(fpkmMap.get(graph.getEdgeTarget(edge)));
+						else System.err.println("No expression for gene " + graph.getEdgeTarget(edge));
+					}
+				}
+				
+				double low = 1000; //arbitrarily extreme numbers
+				double high = -1000;
+				double sum = 0;
+				if (neighborExpressions.contains(null)) {
+					System.err.println("Missing value for neighbor of " + gene);
+					outString += "\t\t\t\t\n";
+				} else if (neighborExpressions.size() > 0) {
+					for (Double d : neighborExpressions) {
+						if (d < low) low = d;
+						if (d > high) high = d;
+						sum += d;
+					}
+					outString += fpkmMap.get(gene) + "\t" + low + "\t" + high + "\t" + sum + "\t" + (sum/neighborExpressions.size()) + "\n";
+				} else {
+					outString += "\t\t\t\t\n";
+				}
+				fw.append(outString);
+			}
+			
+		} catch (FileNotFoundException exception) {
+			exception.printStackTrace();
+		} catch (IOException exception) {
+			exception.printStackTrace();
+		} catch (Exception exception) {
+			exception.printStackTrace();
+		}
+		finally {
+			try {
+			} catch (Exception exception) {
+				exception.printStackTrace();
+			}
+			try {
+				if (fw != null) {
+					fw.close();
+				}
+			} catch (IOException exception) {
+				exception.printStackTrace();
+			}
+		}
+//		HashSet<String> set = new HashSet<String>();
+//		for (DefaultEdge edge : graph.edgeSet()) {
+//			set.add(graph.getEdgeSource(edge));
+//			set.add(graph.getEdgeTarget(edge));
+////			System.out.println(map.get(graph.getEdgeSource(edge)) + "\t" + map.get(graph.getEdgeTarget(edge)));
+//		}
+//		int hit = 0;
+//		int miss = 0;
+//		String out = "";
+//		for (String item : set) {
+//			if (map.containsKey(item)) hit++;
+//			else {
+//				System.out.println(item);
+//				miss++;
+//			}
+//			out += item + "\n";
+//		}
+//		System.out.println(hit + "\t" + miss);
 	}
 	
 	/**
@@ -781,6 +882,57 @@ public class Test {
 			}
 		}
 		System.out.println("Done reading map file!"); //TODO only on verbose flag
+		return map;
+	}
+	
+	public static HashMap<String, Double> readFPKMMap() {
+		BufferedReader reader = null;
+		HashMap<String, Double> map = new HashMap<String, Double>(); 
+		
+		try {
+			JFileChooser fc = new JFileChooser();
+			fc.setCurrentDirectory(new File("Data"));
+			
+			if (fc.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
+				System.out.println("Reading map file...");
+				File mapFile = fc.getSelectedFile();
+				
+				reader = new BufferedReader(new FileReader(mapFile));
+				String line = reader.readLine();//skip header
+				System.out.println("Skipping header line : " + line);
+				while ((line = reader.readLine()) != null) {
+					String[] data = line.split("\t");
+					String geneName = data[0].toUpperCase();
+					double fpkm = Double.parseDouble(data[1]);
+					map.put(geneName, fpkm);
+				}
+				
+			} else {
+				System.err.println("User Canceled");
+				return null;
+			}
+			
+		} catch (FileNotFoundException exception) {
+			exception.printStackTrace();
+		} catch (IOException exception) {
+			exception.printStackTrace();
+		} catch (Exception exception) {
+			exception.printStackTrace();
+		}
+		finally {
+			try {
+			} catch (Exception exception) {
+				exception.printStackTrace();
+			}
+			try {
+				if (reader != null) {
+					reader.close();
+				}
+			} catch (IOException exception) {
+				exception.printStackTrace();
+			}
+		}
+		System.out.println("Done reading map file!");
 		return map;
 	}
 	

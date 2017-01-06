@@ -108,10 +108,7 @@ public class Main {
 	}
 	
 	private static void test() {
-		UndirectedGraph<String, DefaultEdge> graph = generateNetworkFromiPfam();
-		writeGraph(graph);
 		
-//		readGraph();
 	}
 	
 	private static void writeGraph(UndirectedGraph<String, DefaultEdge> graph) {
